@@ -1,0 +1,46 @@
+version: '3'
+
+networks:
+  monitor-net:
+    driver: bridge
+
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana_data:/var/lib/grafana  # 持久化仪表盘和数据源配置
+      - ./grafana/provisioning:/etc/grafana/provisioning  # 预配置数据源和仪表盘（可选）
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123  # 修改默认密码
+      - GF_USERS_ALLOW_SIGN_UP=false  # 禁止用户注册
+    networks:
+      - monitor-net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml  # 挂载配置文件
+      - ./prometheus_data:/prometheus  # 持久化监控数据
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=7d'  # 数据保留7天
+    networks:
+      - monitor-net
+
+  node-exporter:  # 监控主机资源（可选）
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - monitor-net
