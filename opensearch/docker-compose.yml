@@ -1,0 +1,27 @@
+version: '3'
+
+networks:
+  lan_access:
+    driver: host
+
+services:
+  opensearch:
+    image: opensearchproject/opensearch:2
+    container_name: local-opensearch
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    environment:
+      - "discovery.type=single-node"
+      - "plugins.security.disabled=true"
+      - "OPENSEARCH_INITIAL_ADMIN_PASSWORD=Yidoutang123456"
+      - "OPENSEARCH_JAVA_OPTS=-Dopensearch.security.enabled=false"
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2
+    container_name: local-opensearch-dashboards
+    ports:
+      - "5601:5601"
+    environment:
+      - "OPENSEARCH_HOSTS=http://host.docker.internal:9200"
+      - "OPENSEARCH_SECURITY_ENABLED=false"  # dashboards 存在一点问题
